@@ -3142,6 +3142,43 @@ canvas {
   }
 }
 
+/* ===== Custom Scrollbar ===== */
+.slide {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.slide::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+  background: transparent;
+}
+
+.slide-content {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.slide-content::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+  background: transparent;
+}
+
+.tools-showcase {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.tools-showcase::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+  background: transparent;
+}
+
 /* ===== Landscape Mobile ===== */
 @media (max-height: 500px) and (orientation: landscape) {
   .slide {

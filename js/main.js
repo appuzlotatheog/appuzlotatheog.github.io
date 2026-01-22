@@ -1,3 +1,5 @@
+import "./game.js";
+
 class Portfolio {
   constructor() {
     this.currentSlide = 0;
@@ -351,12 +353,20 @@ class Portfolio {
   }
 
   updateThemeIcon(theme) {
-    const icon = document.querySelector(".theme-switch i");
-    if (!icon) return;
+    const svg = document.querySelector(".theme-switch svg");
+    if (!svg) return;
+
     if (theme === "dark") {
-      icon.className = "ph ph-sun";
+      // Sun icon for dark mode (to switch to light)
+      svg.innerHTML = `
+        <circle cx="12" cy="12" r="5" stroke="currentColor" stroke-width="2"/>
+        <path d="M12 2V4M12 20V22M4.93 4.93L6.34 6.34M17.66 17.66L19.07 19.07M2 12H4M20 12H22M4.93 19.07L6.34 17.66M17.66 6.34L19.07 4.93" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      `;
     } else {
-      icon.className = "ph ph-moon";
+      // Moon icon for light mode (to switch to dark)
+      svg.innerHTML = `
+        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      `;
     }
   }
 
@@ -407,3 +417,5 @@ class Portfolio {
 document.addEventListener("DOMContentLoaded", () => {
   window.portfolio = new Portfolio();
 });
+
+export default Portfolio;

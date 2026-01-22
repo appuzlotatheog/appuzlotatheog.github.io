@@ -1544,17 +1544,33 @@ class Coin {
     const stretch = Math.abs(Math.sin(frame * 0.1));
     const w = 12 * stretch + 4;
 
+    // Shadow
+    ctx.fillStyle = "rgba(0, 0, 0, 0.15)";
+    ctx.beginPath();
+    ctx.ellipse(
+      this.x + 8,
+      this.y + 15,
+      w / 2 + 1,
+      4,
+      0,
+      0,
+      Math.PI * 2,
+      false,
+    );
+    ctx.fill();
+
     // Coin with 3D effect
     const coinGrad = ctx.createRadialGradient(
-      this.x + 8,
-      this.y + 8,
+      this.x + 6,
+      this.y + 6,
       0,
       this.x + 8,
       this.y + 8,
-      10,
+      12,
     );
-    coinGrad.addColorStop(0, "#FFF700");
-    coinGrad.addColorStop(0.5, "#FFD700");
+    coinGrad.addColorStop(0, "#FFFF8A");
+    coinGrad.addColorStop(0.3, "#FFD700");
+    coinGrad.addColorStop(0.7, "#DAA520");
     coinGrad.addColorStop(1, "#B8860B");
 
     ctx.fillStyle = coinGrad;
@@ -1571,17 +1587,50 @@ class Coin {
     );
     ctx.fill();
 
-    // Inner shine
-    ctx.fillStyle = "#FFFACD";
+    // Coin edge (darker)
+    ctx.strokeStyle = "#B8860B";
+    ctx.lineWidth = 1;
     ctx.beginPath();
-    ctx.ellipse(this.x + 8, this.y + 8, w / 3, 5, 0, 0, Math.PI * 2, false);
+    ctx.ellipse(
+      this.x + 8,
+      this.y + 8,
+      w / 2 + 2,
+      10,
+      0,
+      0,
+      Math.PI * 2,
+      false,
+    );
+    ctx.stroke();
+
+    // Inner shine
+    const innerGrad = ctx.createRadialGradient(
+      this.x + 7,
+      this.y + 6,
+      0,
+      this.x + 7,
+      this.y + 6,
+      6,
+    );
+    innerGrad.addColorStop(0, "#FFFFE0");
+    innerGrad.addColorStop(1, "#FFFACD");
+    ctx.fillStyle = innerGrad;
+    ctx.beginPath();
+    ctx.ellipse(this.x + 7, this.y + 7, w / 3 - 1, 4, 0, 0, Math.PI * 2, false);
     ctx.fill();
 
     // Highlight
-    ctx.fillStyle = "rgba(255, 255, 255, 0.6)";
+    ctx.fillStyle = "rgba(255, 255, 255, 0.7)";
     ctx.beginPath();
-    ctx.ellipse(this.x + 6, this.y + 5, 2, 3, -0.5, 0, Math.PI * 2, false);
+    ctx.ellipse(this.x + 5, this.y + 4, 2, 3, -0.5, 0, Math.PI * 2, false);
     ctx.fill();
+
+    // Star symbol on coin
+    ctx.fillStyle = "#B8860B";
+    ctx.font = "bold 8px sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText("$", this.x + 8, this.y + 8);
   }
 }
 
@@ -1843,30 +1892,95 @@ class Mario extends Entity {
 
     if (this.isBig) {
       // Big Mario
+      // Shadow under feet
+      ctx.fillStyle = "rgba(0, 0, 0, 0.2)";
+      ctx.beginPath();
+      ctx.ellipse(this.x + w / 2, this.y + h, 14, 4, 0, 0, Math.PI * 2, false);
+      ctx.fill();
+
+      // Hat shadow
+      ctx.fillStyle = this.hasFire ? "#ccc" : "#c41e3a";
+      ctx.fillRect(4, 1, w - 8, 6);
+      ctx.fillRect(0, 9, w, 4);
+
       // Hat
       ctx.fillStyle = hatColor;
       ctx.fillRect(4, 0, w - 8, 8);
       ctx.fillRect(0, 8, w, 6);
 
+      // Hat highlight
+      ctx.fillStyle = "rgba(255, 255, 255, 0.2)";
+      ctx.fillRect(5, 1, w - 10, 3);
+
       // Hair
       ctx.fillStyle = "#8b4513";
-      ctx.fillRect(w - 6, 8, 6, 6);
+      ctx.beginPath();
+      ctx.arc(w - 3, 11, 4, 0, Math.PI * 2, false);
+      ctx.fill();
+
+      // Face shadow
+      ctx.fillStyle = "rgba(255, 194, 144, 0.8)";
+      ctx.fillRect(4, 14, w - 8, 12);
 
       // Face
       ctx.fillStyle = skinColor;
       ctx.fillRect(4, 14, w - 8, 12);
 
+      // Ear
+      ctx.fillStyle = skinColor;
+      ctx.beginPath();
+      ctx.arc(w - 2, 18, 3, 0, Math.PI * 2, false);
+      ctx.fill();
+
+      // Eye highlights
+      ctx.fillStyle = "#fff";
+      ctx.fillRect(9, 19, 2, 2);
+      ctx.fillRect(8, 18, 1, 1);
+
       // Eyes
       ctx.fillStyle = "#000";
       ctx.fillRect(8, 18, 4, 4);
+
+      // Blush
+      ctx.fillStyle = "rgba(255, 182, 193, 0.4)";
+      ctx.fillRect(3, 22, 3, 2);
+
+      // Nose
+      ctx.fillStyle = "#e5a88a";
+      ctx.fillRect(10, 22, 4, 3);
+
+      // Mustache shadow
+      ctx.fillStyle = "#5D3A1A";
+      ctx.fillRect(4, 26, w - 8, 1);
 
       // Mustache
       ctx.fillStyle = "#8b4513";
       ctx.fillRect(4, 22, w - 8, 4);
 
+      // Mustache detail
+      ctx.fillStyle = "#654321";
+      ctx.fillRect(4, 25, w - 8, 1);
+
+      // Mouth
+      ctx.fillStyle = "#8B4513";
+      ctx.fillRect(8, 24, 6, 2);
+
+      // Shirt shadow
+      ctx.fillStyle = "rgba(229, 37, 33, 0.8)";
+      ctx.fillRect(2, 26, w - 4, 10);
+
       // Shirt
       ctx.fillStyle = shirtColor;
       ctx.fillRect(2, 26, w - 4, 10);
+
+      // Shirt highlight
+      ctx.fillStyle = "rgba(255, 255, 255, 0.1)";
+      ctx.fillRect(3, 27, w - 6, 3);
+
+      // Overall straps
+      ctx.fillStyle = overallColor;
+      ctx.fillRect(3, 28, 5, 4);
+      ctx.fillRect(w - 8, 28, 5, 4);
 
       // Overalls
       ctx.fillStyle = overallColor;
@@ -1874,10 +1988,24 @@ class Mario extends Entity {
       ctx.fillRect(4, 28, 6, 8);
       ctx.fillRect(w - 10, 28, 6, 8);
 
+      // Overall texture
+      ctx.fillStyle = "rgba(0, 0, 100, 0.1)";
+      ctx.fillRect(2, 34, w - 4, 7);
+
+      // Buttons shadow
+      ctx.fillStyle = "#ccac00";
+      ctx.fillRect(7, 35, 3, 3);
+      ctx.fillRect(w - 9, 35, 3, 3);
+
       // Buttons
       ctx.fillStyle = "#ffd700";
       ctx.fillRect(6, 34, 4, 4);
       ctx.fillRect(w - 10, 34, 4, 4);
+
+      // Button highlights
+      ctx.fillStyle = "rgba(255, 255, 255, 0.4)";
+      ctx.fillRect(7, 35, 2, 2);
+      ctx.fillRect(w - 9, 35, 2, 2);
 
       // Legs animation
       const legOffset = isJumping
@@ -1889,10 +2017,30 @@ class Mario extends Entity {
       ctx.fillRect(2, 42, 8, 6 + legOffset);
       ctx.fillRect(w - 10, 42, 8, 6 - legOffset);
 
+      // Leg highlights
+      ctx.fillStyle = "rgba(255, 255, 255, 0.1)";
+      ctx.fillRect(3, 42, 3, 4);
+      ctx.fillRect(w - 9, 42, 3, 4);
+
+      // Shoes shadow
+      ctx.fillStyle = "#5D3A1A";
+      ctx.fillRect(0, h - 4, 10, 2);
+      ctx.fillRect(w - 10, h - 4, 10, 2);
+
       // Shoes
       ctx.fillStyle = shoeColor;
       ctx.fillRect(0, h - 6, 10, 6);
       ctx.fillRect(w - 10, h - 6, 10, 6);
+
+      // Shoe details
+      ctx.fillStyle = "#654321";
+      ctx.fillRect(1, h - 4, 4, 2);
+      ctx.fillRect(w - 5, h - 4, 4, 2);
+
+      // Shoe highlights
+      ctx.fillStyle = "rgba(255, 255, 255, 0.2)";
+      ctx.fillRect(1, h - 5, 3, 1);
+      ctx.fillRect(w - 9, h - 5, 3, 1);
     } else {
       // Small Mario
       // Hat
@@ -1994,14 +2142,63 @@ class Fireball extends Entity {
   }
 
   draw(ctx) {
-    ctx.fillStyle = "#ff6600";
+    // Fireball glow
+    const glowGrad = ctx.createRadialGradient(
+      this.x + 6,
+      this.y + 6,
+      0,
+      this.x + 6,
+      this.y + 6,
+      10,
+    );
+    glowGrad.addColorStop(0, "rgba(255, 200, 0, 0.8)");
+    glowGrad.addColorStop(0.5, "rgba(255, 100, 0, 0.4)");
+    glowGrad.addColorStop(1, "rgba(255, 50, 0, 0)");
+    ctx.fillStyle = glowGrad;
+    ctx.beginPath();
+    ctx.arc(this.x + 6, this.y + 6, 10, 0, Math.PI * 2, false);
+    ctx.fill();
+
+    // Fireball body
+    const bodyGrad = ctx.createRadialGradient(
+      this.x + 4,
+      this.y + 4,
+      0,
+      this.x + 6,
+      this.y + 6,
+      6,
+    );
+    bodyGrad.addColorStop(0, "#FFFF00");
+    bodyGrad.addColorStop(0.5, "#FF8C00");
+    bodyGrad.addColorStop(1, "#FF4500");
+    ctx.fillStyle = bodyGrad;
     ctx.beginPath();
     ctx.arc(this.x + 6, this.y + 6, 6, 0, Math.PI * 2, false);
     ctx.fill();
-    ctx.fillStyle = "#ffcc00";
+
+    // Inner core
+    ctx.fillStyle = "#FFFFE0";
     ctx.beginPath();
-    ctx.arc(this.x + 6, this.y + 6, 3, 0, Math.PI * 2, false);
+    ctx.arc(this.x + 5, this.y + 5, 3, 0, Math.PI * 2, false);
     ctx.fill();
+
+    // Highlight
+    ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
+    ctx.beginPath();
+    ctx.arc(this.x + 4, this.y + 4, 2, 0, Math.PI * 2, false);
+    ctx.fill();
+
+    // Flame trail particles
+    for (let i = 0; i < 3; i++) {
+      const trailX = this.x + 6 - (this.vx > 0 ? -i * 3 : i * 3);
+      const trailY = this.y + 6 + Math.sin(Date.now() / 50 + i) * 2;
+      const trailSize = 4 - i;
+      const trailAlpha = 0.6 - i * 0.2;
+      ctx.fillStyle = `rgba(255, ${150 - i * 30}, 0, ${trailAlpha})`;
+      ctx.beginPath();
+      ctx.arc(trailX, trailY, trailSize, 0, Math.PI * 2, false);
+      ctx.fill();
+    }
   }
 }
 
@@ -2067,6 +2264,15 @@ class Goomba extends Entity {
       ctx.ellipse(this.x + 14, this.y + 24, 16, 6, 0, 0, Math.PI * 2, false);
       ctx.fill();
 
+      // Body texture squish marks
+      ctx.fillStyle = "#654321";
+      ctx.beginPath();
+      ctx.ellipse(this.x + 10, this.y + 24, 6, 3, 0.3, 0, Math.PI * 2, false);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.ellipse(this.x + 18, this.y + 24, 5, 2, -0.3, 0, Math.PI * 2, false);
+      ctx.fill();
+
       // Eyes
       ctx.fillStyle = "#fff";
       ctx.beginPath();
@@ -2091,6 +2297,12 @@ class Goomba extends Entity {
     } else {
       const walkOffset = Math.sin(this.walkFrame) * 2;
 
+      // Shadow
+      ctx.fillStyle = "rgba(0, 0, 0, 0.2)";
+      ctx.beginPath();
+      ctx.ellipse(this.x + 14, this.y + 28, 12, 4, 0, 0, Math.PI * 2, false);
+      ctx.fill();
+
       // Body with gradient effect
       const bodyGrad = ctx.createRadialGradient(
         this.x + 14,
@@ -2101,16 +2313,33 @@ class Goomba extends Entity {
         14,
       );
       bodyGrad.addColorStop(0, "#D2691E");
+      bodyGrad.addColorStop(0.7, "#A0522D");
       bodyGrad.addColorStop(1, "#8B4513");
       ctx.fillStyle = bodyGrad;
       ctx.beginPath();
       ctx.ellipse(this.x + 14, this.y + 10, 14, 12, 0, 0, Math.PI * 2, false);
       ctx.fill();
 
+      // Body texture spots
+      ctx.fillStyle = "rgba(139, 69, 19, 0.5)";
+      for (let i = 0; i < 5; i++) {
+        const spotX = this.x + 6 + (i % 3) * 8;
+        const spotY = this.y + 8 + Math.floor(i / 3) * 8;
+        ctx.beginPath();
+        ctx.arc(spotX, spotY, 1.5, 0, Math.PI * 2, false);
+        ctx.fill();
+      }
+
       // Belly
       ctx.fillStyle = "#DEB887";
       ctx.beginPath();
       ctx.ellipse(this.x + 14, this.y + 14, 8, 6, 0, 0, Math.PI * 2, false);
+      ctx.fill();
+
+      // Belly highlight
+      ctx.fillStyle = "rgba(255, 255, 255, 0.3)";
+      ctx.beginPath();
+      ctx.ellipse(this.x + 12, this.y + 12, 3, 2, -0.5, 0, Math.PI * 2, false);
       ctx.fill();
 
       // Eyes - big white circles with angry eyebrows
@@ -2120,6 +2349,11 @@ class Goomba extends Entity {
       ctx.arc(this.x + 20, this.y + 10, 5, 0, Math.PI * 2, false);
       ctx.fill();
 
+      // Eye highlights
+      ctx.fillStyle = "#fff";
+      ctx.fillRect(this.x + 6, this.y + 8, 2, 2);
+      ctx.fillRect(this.x + 19, this.y + 8, 2, 2);
+
       // Pupils
       ctx.fillStyle = "#000";
       ctx.fillRect(this.x + 6, this.y + 10, 3, 4);
@@ -2127,28 +2361,49 @@ class Goomba extends Entity {
 
       // Angry eyebrows
       ctx.fillStyle = "#4a0080";
-      ctx.fillRect(this.x + 4, this.y + 5, 8, 3);
-      ctx.fillRect(this.x + 18, this.y + 5, 8, 3);
+      ctx.beginPath();
+      ctx.moveTo(this.x + 3, this.y + 5);
+      ctx.lineTo(this.x + 11, this.y + 7);
+      ctx.lineTo(this.x + 11, this.y + 5);
+      ctx.lineTo(this.x + 3, this.y + 5);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(this.x + 21, this.y + 5);
+      ctx.lineTo(this.x + 25, this.y + 7);
+      ctx.lineTo(this.x + 25, this.y + 5);
+      ctx.lineTo(this.x + 21, this.y + 5);
+      ctx.fill();
 
       // Nose
       ctx.fillStyle = "#D2691E";
-      ctx.fillRect(this.x + 12, this.y + 16, 4, 3);
+      ctx.beginPath();
+      ctx.arc(this.x + 14, this.y + 17, 3, 0, Math.PI * 2, false);
+      ctx.fill();
+      ctx.fillStyle = "#8B4513";
+      ctx.fillRect(this.x + 12, this.y + 16, 4, 2);
 
       // Mouth - grumpy expression
       ctx.fillStyle = "#4a0080";
-      ctx.fillRect(this.x + 10, this.y + 20, 8, 2);
+      ctx.beginPath();
+      ctx.arc(this.x + 14, this.y + 21, 4, 0.2, Math.PI - 0.2, false);
+      ctx.stroke();
 
       // Feet with walking animation
       ctx.fillStyle = "#2F1810";
       ctx.fillRect(this.x + 2 - walkOffset, this.y + 20, 10, 6);
       ctx.fillRect(this.x + 16 + walkOffset, this.y + 20, 10, 6);
 
-      // Toes
+      // Feet highlights
       ctx.fillStyle = "#8B4513";
-      ctx.fillRect(this.x + 2 - walkOffset, this.y + 22, 3, 2);
-      ctx.fillRect(this.x + 8 - walkOffset, this.y + 22, 3, 2);
-      ctx.fillRect(this.x + 16 + walkOffset, this.y + 22, 3, 2);
-      ctx.fillRect(this.x + 22 + walkOffset, this.y + 22, 3, 2);
+      ctx.fillRect(this.x + 2 - walkOffset, this.y + 20, 10, 2);
+      ctx.fillRect(this.x + 16 + walkOffset, this.y + 20, 10, 2);
+
+      // Toes
+      ctx.fillStyle = "#5D3A1A";
+      ctx.fillRect(this.x + 2 - walkOffset, this.y + 24, 3, 2);
+      ctx.fillRect(this.x + 8 - walkOffset, this.y + 24, 3, 2);
+      ctx.fillRect(this.x + 16 + walkOffset, this.y + 24, 3, 2);
+      ctx.fillRect(this.x + 22 + walkOffset, this.y + 24, 3, 2);
     }
   }
 }
@@ -2290,6 +2545,16 @@ class Koopa extends Entity {
       ctx.ellipse(this.x + 16, this.y + 38, 10, 5, 0, 0, Math.PI * 2, false);
       ctx.fill();
 
+      // Belly texture lines
+      ctx.strokeStyle = "rgba(0, 0, 0, 0.1)";
+      ctx.lineWidth = 1;
+      for (let i = 0; i < 3; i++) {
+        ctx.beginPath();
+        ctx.moveTo(this.x + 7, this.y + 36 + i * 2);
+        ctx.lineTo(this.x + 25, this.y + 36 + i * 2);
+        ctx.stroke();
+      }
+
       // Shell highlight
       ctx.fillStyle = "rgba(255, 255, 255, 0.3)";
       ctx.beginPath();
@@ -2298,16 +2563,30 @@ class Koopa extends Entity {
     } else {
       const walkOffset = Math.sin(this.walkFrame) * 3;
 
-      // Body - oval shape
+      // Shadow
+      ctx.fillStyle = "rgba(0, 0, 0, 0.2)";
+      ctx.beginPath();
+      ctx.ellipse(this.x + 16, this.y + 42, 14, 5, 0, 0, Math.PI * 2, false);
+      ctx.fill();
+
+      // Feet shadow
+      const footY = this.y + 36 + walkOffset;
+      ctx.beginPath();
+      ctx.ellipse(this.x + 8, this.y + 42, 6, 3, 0, 0, Math.PI * 2, false);
+      ctx.ellipse(this.x + 24, this.y + 42, 6, 3, 0, 0, Math.PI * 2, false);
+      ctx.fill();
+
+      // Body - oval shape with gradient
       const bodyGrad = ctx.createRadialGradient(
         this.x + 16,
         this.y + 16,
         0,
         this.x + 16,
         this.y + 16,
-        18,
+        20,
       );
       bodyGrad.addColorStop(0, "#90EE90");
+      bodyGrad.addColorStop(0.6, "#32CD32");
       bodyGrad.addColorStop(1, "#228B22");
 
       ctx.fillStyle = bodyGrad;
@@ -2315,19 +2594,49 @@ class Koopa extends Entity {
       ctx.ellipse(this.x + 16, this.y + 16, 15, 20, 0, 0, Math.PI * 2, false);
       ctx.fill();
 
-      // Shell on back
-      ctx.fillStyle = "#228B22";
+      // Body texture lines
+      ctx.strokeStyle = "rgba(0, 100, 0, 0.3)";
+      ctx.lineWidth = 1;
+      for (let i = 0; i < 4; i++) {
+        ctx.beginPath();
+        ctx.arc(this.x + 16, this.y + 16, 5 + i * 4, 0, Math.PI * 2, false);
+        ctx.stroke();
+      }
+
+      // Shell on back with pattern
+      const shellGrad = ctx.createRadialGradient(
+        this.x + 16,
+        this.y + 28,
+        0,
+        this.x + 16,
+        this.y + 28,
+        12,
+      );
+      shellGrad.addColorStop(0, "#32CD32");
+      shellGrad.addColorStop(1, "#006400");
+
+      ctx.fillStyle = shellGrad;
       ctx.beginPath();
       ctx.ellipse(this.x + 16, this.y + 28, 12, 8, 0, 0, Math.PI * 2, false);
       ctx.fill();
-      ctx.strokeStyle = "#006400";
+
+      // Shell pattern stripes
+      ctx.fillStyle = "#228B22";
+      ctx.beginPath();
+      ctx.ellipse(this.x + 16, this.y + 28, 8, 5, 0, 0, Math.PI * 2, false);
+      ctx.fill();
+
+      // Shell rim
+      ctx.strokeStyle = "#004d00";
       ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.ellipse(this.x + 16, this.y + 28, 12, 8, 0, 0, Math.PI * 2, false);
       ctx.stroke();
 
       // Shell highlight
-      ctx.fillStyle = "rgba(255, 255, 255, 0.2)";
+      ctx.fillStyle = "rgba(255, 255, 255, 0.25)";
       ctx.beginPath();
-      ctx.ellipse(this.x + 12, this.y + 26, 4, 3, -0.3, 0, Math.PI * 2, false);
+      ctx.ellipse(this.x + 12, this.y + 24, 5, 3, -0.3, 0, Math.PI * 2, false);
       ctx.fill();
 
       // Head
@@ -2336,8 +2645,14 @@ class Koopa extends Entity {
       ctx.arc(this.x + 16, this.y + 6, 10, 0, Math.PI * 2, false);
       ctx.fill();
 
+      // Head texture
+      ctx.fillStyle = "rgba(0, 100, 0, 0.1)";
+      ctx.beginPath();
+      ctx.arc(this.x + 16, this.y + 8, 7, 0, Math.PI * 2, false);
+      ctx.fill();
+
       // Head highlight
-      ctx.fillStyle = "rgba(255, 255, 255, 0.3)";
+      ctx.fillStyle = "rgba(255, 255, 255, 0.35)";
       ctx.beginPath();
       ctx.arc(this.x + 13, this.y + 3, 4, 0, Math.PI * 2, false);
       ctx.fill();
@@ -2349,24 +2664,45 @@ class Koopa extends Entity {
       ctx.arc(this.x + 21, this.y + 5, 5, 0, Math.PI * 2, false);
       ctx.fill();
 
+      // Eye ring
+      ctx.strokeStyle = "#000";
+      ctx.lineWidth = 0.5;
+      ctx.beginPath();
+      ctx.arc(this.x + 11, this.y + 5, 5, 0, Math.PI * 2, false);
+      ctx.arc(this.x + 21, this.y + 5, 5, 0, Math.PI * 2, false);
+      ctx.stroke();
+
       // Pupils
       ctx.fillStyle = "#000";
       ctx.beginPath();
-      ctx.arc(this.x + 12, this.y + 5, 2, 0, Math.PI * 2, false);
-      ctx.arc(this.x + 22, this.y + 5, 2, 0, Math.PI * 2, false);
+      ctx.arc(this.x + 12, this.y + 5, 2.5, 0, Math.PI * 2, false);
+      ctx.arc(this.x + 22, this.y + 5, 2.5, 0, Math.PI * 2, false);
       ctx.fill();
 
       // Eye shine
       ctx.fillStyle = "#fff";
-      ctx.fillRect(this.x + 12, this.y + 4, 1, 1);
-      ctx.fillRect(this.x + 22, this.y + 4, 1, 1);
+      ctx.fillRect(this.x + 11, this.y + 4, 1.5, 1.5);
+      ctx.fillRect(this.x + 21, this.y + 4, 1.5, 1.5);
+
+      // Blush
+      ctx.fillStyle = "rgba(255, 182, 193, 0.5)";
+      ctx.beginPath();
+      ctx.ellipse(this.x + 6, this.y + 8, 3, 2, 0, 0, Math.PI * 2, false);
+      ctx.ellipse(this.x + 26, this.y + 8, 3, 2, 0, 0, Math.PI * 2, false);
+      ctx.fill();
 
       // Feet with animation
       ctx.fillStyle = "#8B4513";
-      const footY = this.y + 36 + walkOffset;
       ctx.beginPath();
       ctx.ellipse(this.x + 8, footY, 7, 4, 0, 0, Math.PI * 2, false);
       ctx.ellipse(this.x + 24, footY, 7, 4, 0, 0, Math.PI * 2, false);
+      ctx.fill();
+
+      // Feet highlights
+      ctx.fillStyle = "#A0522D";
+      ctx.beginPath();
+      ctx.ellipse(this.x + 8, footY - 1, 5, 2, 0, 0, Math.PI * 2, false);
+      ctx.ellipse(this.x + 24, footY - 1, 5, 2, 0, 0, Math.PI * 2, false);
       ctx.fill();
     }
   }
@@ -2530,3 +2866,5 @@ document.addEventListener("DOMContentLoaded", () => {
   window.game = new MiniGame();
   window.game.init();
 });
+
+export default MiniGame;
