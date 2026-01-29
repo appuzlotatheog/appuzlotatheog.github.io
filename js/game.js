@@ -15,7 +15,15 @@ class MiniGame {
     this.fireballs = [];
     this.flagpole = null;
     this.currentLevel = 1;
-    this.totalLevels = 4;
+    this.totalLevels = 5;
+    this.lives = 3;
+
+    // Screen shake effect
+    this.screenShake = { x: 0, y: 0, intensity: 0, decay: 0.9 };
+
+    // Background layers for parallax
+    this.backgroundLayers = [];
+    this.decorations = [];
 
     this.keys = {
       right: false,
@@ -61,6 +69,13 @@ class MiniGame {
     this.lastCanvasHeight = 0;
     this.viewLeft = 0;
     this.viewRight = 0;
+
+    // Mobile detection
+    this.isMobile = "ontouchstart" in window || navigator.maxTouchPoints > 0;
+    this.supportsVibration = "vibrate" in navigator;
+
+    this.isMuted = localStorage.getItem("gameMuted") === "true";
+    this.highScore = parseInt(localStorage.getItem("gameHighScore") || "0");
   }
 
   initAudio() {
@@ -75,16 +90,97 @@ class MiniGame {
     if (!this.canvas) return;
     this.ctx = this.canvas.getContext("2d");
     this.setupEventListeners();
+    this.updateMuteButton();
+    this.generateBackgroundLayers();
+    this.showMobileControls();
     this.drawStartScreen();
+  }
+
+  // Haptic feedback for mobile
+  vibrate(pattern = 10) {
+    if (this.supportsVibration && !this.isMuted) {
+      navigator.vibrate(pattern);
+    }
+  }
+
+  // Screen shake effect
+  triggerScreenShake(intensity = 5) {
+    this.screenShake.intensity = intensity;
+  }
+
+  updateScreenShake() {
+    if (this.screenShake.intensity > 0.5) {
+      this.screenShake.x = (Math.random() - 0.5) * this.screenShake.intensity;
+      this.screenShake.y = (Math.random() - 0.5) * this.screenShake.intensity;
+      this.screenShake.intensity *= this.screenShake.decay;
+    } else {
+      this.screenShake.x = 0;
+      this.screenShake.y = 0;
+      this.screenShake.intensity = 0;
+    }
+  }
+
+  // Generate background layers for parallax effect
+  generateBackgroundLayers() {
+    this.backgroundLayers = {
+      mountains: [],
+      hills: [],
+      clouds: [],
+      bushes: [],
+    };
+
+    // Generate mountains
+    for (let i = 0; i < 10; i++) {
+      this.backgroundLayers.mountains.push({
+        x: i * 400 + Math.random() * 100,
+        height: 80 + Math.random() * 60,
+        width: 150 + Math.random() * 100,
+      });
+    }
+
+    // Generate hills
+    for (let i = 0; i < 15; i++) {
+      this.backgroundLayers.hills.push({
+        x: i * 250 + Math.random() * 50,
+        height: 40 + Math.random() * 30,
+        width: 100 + Math.random() * 50,
+      });
+    }
+
+    // Generate clouds
+    for (let i = 0; i < 12; i++) {
+      this.backgroundLayers.clouds.push({
+        x: i * 200 + Math.random() * 100,
+        y: 30 + Math.random() * 80,
+        scale: 0.6 + Math.random() * 0.8,
+      });
+    }
+
+    // Generate bushes
+    for (let i = 0; i < 20; i++) {
+      this.backgroundLayers.bushes.push({
+        x: i * 150 + Math.random() * 50,
+        scale: 0.5 + Math.random() * 0.5,
+      });
+    }
+  }
+
+  showMobileControls() {
+    const mobileControls = document.getElementById("mobileControls");
+    if (mobileControls && this.isMobile) {
+      mobileControls.style.display = "block";
+    }
   }
 
   setupEventListeners() {
     const startBtn = document.getElementById("startGameBtn");
     const restartBtn = document.getElementById("restartBtn");
+    const muteBtn = document.getElementById("muteBtn");
 
     if (startBtn) startBtn.addEventListener("click", () => this.startGame());
     if (restartBtn)
       restartBtn.addEventListener("click", () => this.startGame());
+    if (muteBtn) muteBtn.addEventListener("click", () => this.toggleMute());
 
     window.addEventListener("keydown", (e) => {
       this.handleKeyDown(e);
@@ -96,6 +192,81 @@ class MiniGame {
 
     // Mobile touch controls
     this.setupTouchControls();
+  }
+
+  toggleMute() {
+    this.isMuted = !this.isMuted;
+    localStorage.setItem("gameMuted", this.isMuted);
+    this.updateMuteButton();
+  }
+
+  updateMuteButton() {
+    const muteBtn = document.getElementById("muteBtn");
+    if (!muteBtn) return;
+
+    if (this.isMuted) {
+      muteBtn.innerHTML = `
+        <svg class="icon-svg-inline" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <line x1="23" y1="9" x2="17" y2="15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <line x1="17" y1="9" x2="23" y2="15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      `;
+    } else {
+      muteBtn.innerHTML = `
+        <svg class="icon-svg-inline" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M19.07 4.93C20.98 6.84 21.96 9.42 21.96 12C21.96 14.58 20.98 17.16 19.07 19.07M15.54 8.46C16.47 9.39 17 10.7 17 12C17 13.3 16.47 14.61 15.54 15.54" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      `;
+    }
+  }
+
+  updateScore(points) {
+    this.score += points;
+    if (this.score > this.highScore) {
+      this.highScore = this.score;
+      localStorage.setItem("gameHighScore", this.highScore);
+    }
+
+    // Update score display in HUD with animation effect
+    const scoreDisplay = document.getElementById("scoreDisplay");
+    if (scoreDisplay) {
+      scoreDisplay.textContent = this.score.toString().padStart(6, "0");
+      scoreDisplay.style.transform = "scale(1.2)";
+      scoreDisplay.style.color = "#FFD700";
+      setTimeout(() => {
+        scoreDisplay.style.transform = "scale(1)";
+        scoreDisplay.style.color = "#fff";
+      }, 150);
+    }
+
+    const mobileScore = document.getElementById("mobileScore");
+    if (mobileScore) mobileScore.textContent = this.score;
+  }
+
+  updateLivesDisplay() {
+    const livesDisplay = document.getElementById("livesDisplay");
+    if (livesDisplay) {
+      livesDisplay.textContent = this.lives;
+      livesDisplay.style.transform = "scale(1.3)";
+      livesDisplay.style.color = "#ef4444";
+      setTimeout(() => {
+        livesDisplay.style.transform = "scale(1)";
+        livesDisplay.style.color = "#fff";
+      }, 200);
+    }
+  }
+
+  updatePowerDisplay(power) {
+    const powerDisplay = document.getElementById("powerDisplay");
+    if (powerDisplay) {
+      powerDisplay.textContent = power;
+      powerDisplay.style.transform = "scale(1.2)";
+      setTimeout(() => {
+        powerDisplay.style.transform = "scale(1)";
+      }, 150);
+    }
   }
 
   drawStartScreen() {
@@ -143,31 +314,36 @@ class MiniGame {
     ctx.translate(x, y);
     ctx.scale(scale, scale);
 
-    if (!this.cachedCloudGradient) {
-      this.cachedCloudGradient = ctx.createRadialGradient(
-        30,
-        20,
-        0,
-        30,
-        20,
-        50,
-      );
-      this.cachedCloudGradient.addColorStop(0, "rgba(255, 255, 255, 0.9)");
-      this.cachedCloudGradient.addColorStop(0.5, "rgba(255, 255, 255, 0.7)");
-      this.cachedCloudGradient.addColorStop(1, "rgba(255, 255, 255, 0.5)");
-    }
+    // Soft cloud gradient
+    const cloudGrad = ctx.createRadialGradient(30, 15, 0, 30, 20, 50);
+    cloudGrad.addColorStop(0, "rgba(255, 255, 255, 0.95)");
+    cloudGrad.addColorStop(0.4, "rgba(255, 255, 255, 0.8)");
+    cloudGrad.addColorStop(0.7, "rgba(240, 248, 255, 0.6)");
+    cloudGrad.addColorStop(1, "rgba(230, 240, 250, 0.3)");
 
-    ctx.fillStyle = this.cachedCloudGradient;
+    ctx.fillStyle = cloudGrad;
+
+    // Main cloud body
     ctx.beginPath();
-    ctx.ellipse(30, 20, 35, 18, 0, 0, Math.PI * 2, false);
+    ctx.ellipse(30, 18, 38, 20, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    ctx.fillStyle = "rgba(255, 255, 255, 0.6)";
+    // Cloud puffs
+    ctx.fillStyle = "rgba(255, 255, 255, 0.85)";
     ctx.beginPath();
-    ctx.arc(10, 15, 20, 0, Math.PI * 2, false);
+    ctx.arc(8, 18, 18, 0, Math.PI * 2);
     ctx.fill();
     ctx.beginPath();
-    ctx.arc(50, 15, 22, 0, Math.PI * 2, false);
+    ctx.arc(52, 18, 20, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(30, 8, 15, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Cloud highlight
+    ctx.fillStyle = "rgba(255, 255, 255, 0.5)";
+    ctx.beginPath();
+    ctx.ellipse(25, 10, 12, 6, -0.3, 0, Math.PI * 2);
     ctx.fill();
 
     ctx.restore();
@@ -226,135 +402,111 @@ class MiniGame {
     const touchRun = document.getElementById("touchRun");
     const touchShoot = document.getElementById("touchShoot");
 
-    if (touchLeft) {
-      touchLeft.addEventListener(
-        "touchstart",
-        (e) => {
-          e.preventDefault();
-          this.keys.left = true;
-          touchLeft.classList.add("active");
-        },
-        { passive: false },
-      );
-      touchLeft.addEventListener(
-        "touchend",
-        (e) => {
-          e.preventDefault();
-          this.keys.left = false;
-          touchLeft.classList.remove("active");
-        },
-        { passive: false },
-      );
-    }
+    // Helper for haptic feedback
+    const addTouchWithFeedback = (
+      element,
+      onStart,
+      onEnd,
+      vibrationPattern = 10,
+    ) => {
+      if (!element) return;
 
-    if (touchRight) {
-      touchRight.addEventListener(
+      element.addEventListener(
         "touchstart",
         (e) => {
-          e.preventDefault();
-          this.keys.right = true;
-          touchRight.classList.add("active");
+          if (e.cancelable) e.preventDefault();
+          this.vibrate(vibrationPattern);
+          onStart();
+          element.classList.add("active");
         },
         { passive: false },
       );
-      touchRight.addEventListener(
-        "touchend",
-        (e) => {
-          e.preventDefault();
-          this.keys.right = false;
-          touchRight.classList.remove("active");
-        },
-        { passive: false },
-      );
-    }
 
-    if (touchUp) {
-      touchUp.addEventListener(
-        "touchstart",
-        (e) => {
-          e.preventDefault();
-          if (this.gameRunning && this.player) {
-            this.player.tryJump(this);
-          }
-          this.keys.up = true;
-          touchUp.classList.add("active");
-        },
-        { passive: false },
-      );
-      touchUp.addEventListener(
+      element.addEventListener(
         "touchend",
         (e) => {
-          e.preventDefault();
-          this.keys.up = false;
-          touchUp.classList.remove("active");
+          if (e.cancelable) e.preventDefault();
+          onEnd();
+          element.classList.remove("active");
         },
         { passive: false },
       );
-    }
 
-    if (touchDown) {
-      touchDown.addEventListener(
-        "touchstart",
+      element.addEventListener(
+        "touchcancel",
         (e) => {
-          e.preventDefault();
-          this.keys.down = true;
-          touchDown.classList.add("active");
+          if (e.cancelable) e.preventDefault();
+          onEnd();
+          element.classList.remove("active");
         },
         { passive: false },
       );
-      touchDown.addEventListener(
-        "touchend",
-        (e) => {
-          e.preventDefault();
-          this.keys.down = false;
-          touchDown.classList.remove("active");
-        },
-        { passive: false },
-      );
-    }
+    };
 
-    if (touchRun) {
-      touchRun.addEventListener(
-        "touchstart",
-        (e) => {
-          e.preventDefault();
-          this.keys.run = true;
-          touchRun.classList.add("active");
-        },
-        { passive: false },
-      );
-      touchRun.addEventListener(
-        "touchend",
-        (e) => {
-          e.preventDefault();
-          this.keys.run = false;
-          touchRun.classList.remove("active");
-        },
-        { passive: false },
-      );
-    }
+    addTouchWithFeedback(
+      touchLeft,
+      () => {
+        this.keys.left = true;
+      },
+      () => {
+        this.keys.left = false;
+      },
+    );
 
-    if (touchShoot) {
-      touchShoot.addEventListener(
-        "touchstart",
-        (e) => {
-          e.preventDefault();
-          if (this.gameRunning && this.player) {
-            this.player.shootFireball();
-          }
-          touchShoot.classList.add("active");
-        },
-        { passive: false },
-      );
-      touchShoot.addEventListener(
-        "touchend",
-        (e) => {
-          e.preventDefault();
-          touchShoot.classList.remove("active");
-        },
-        { passive: false },
-      );
-    }
+    addTouchWithFeedback(
+      touchRight,
+      () => {
+        this.keys.right = true;
+      },
+      () => {
+        this.keys.right = false;
+      },
+    );
+
+    addTouchWithFeedback(
+      touchUp,
+      () => {
+        if (this.gameRunning && this.player) {
+          this.player.tryJump(this);
+        }
+        this.keys.up = true;
+      },
+      () => {
+        this.keys.up = false;
+      },
+      [10, 5, 10], // Double tap pattern for jump
+    );
+
+    addTouchWithFeedback(
+      touchDown,
+      () => {
+        this.keys.down = true;
+      },
+      () => {
+        this.keys.down = false;
+      },
+    );
+
+    addTouchWithFeedback(
+      touchRun,
+      () => {
+        this.keys.run = true;
+      },
+      () => {
+        this.keys.run = false;
+      },
+    );
+
+    addTouchWithFeedback(
+      touchShoot,
+      () => {
+        if (this.gameRunning && this.player) {
+          this.player.shoot(this);
+        }
+      },
+      () => {},
+      [15, 10, 15], // Stronger feedback for shooting
+    );
   }
 
   // Performance optimization: Object pooling methods
@@ -811,6 +963,28 @@ class MiniGame {
         coins: 20,
         enemies: 10,
       },
+      {
+        // LEVEL 5 - The Ultimate Challenge: Verticality and Precision
+        map: [
+          "..................................................................................",
+          "........................................C.C.C......................................",
+          ".......................................!B!B!B!.....................................",
+          "..........................C.C.......................C.C............................",
+          ".........................?B?B?.....................!B!B!...........................",
+          "...................................................................................",
+          ".................T...........................................T.....................",
+          ".................P..P.....................................P..P.....................",
+          ".................P..P.......PPP.........PPP.........PPP...P..P.........F...........",
+          ".......PPP.......P..P......P...P.......P...P.......P...P..P..P.....................",
+          "......P...P......P..P......P...P...G...P...P...K...P...P..P..P...G.................",
+          "......P...P......P..P......P...P.......P...P.......P...P..P..P.....................",
+          "..C...P...P..C...P..P..C...P...P.......P...P.......P...P..P..P.....................",
+          "####################################################################################",
+          "####################################################################################",
+        ],
+        coins: 25,
+        enemies: 15,
+      },
     ];
   }
 
@@ -885,7 +1059,7 @@ class MiniGame {
   }
 
   playSound(type) {
-    if (!this.audioCtx) return;
+    if (this.isMuted || !this.audioCtx) return;
 
     if (this.audioCtx.state === "suspended") this.audioCtx.resume();
 
@@ -982,9 +1156,56 @@ class MiniGame {
     }
   }
 
-  spawnParticles(x, y, color, count = 4) {
+  spawnParticles(x, y, color, count = 4, options = {}) {
+    const {
+      velocityMultiplier = 1,
+      sizeMultiplier = 1,
+      gravity = true,
+      glow = false,
+    } = options;
+
     for (let i = 0; i < count; i++) {
-      this.particles.push(this.getParticle(x, y, color));
+      const p = this.getParticle(x, y, color);
+      p.vx *= velocityMultiplier;
+      p.vy *= velocityMultiplier;
+      p.size *= sizeMultiplier;
+      p.hasGravity = gravity;
+      p.glow = glow;
+      this.particles.push(p);
+    }
+  }
+
+  // Enhanced particle burst for special effects
+  spawnBurstParticles(x, y, colors, count = 12) {
+    for (let i = 0; i < count; i++) {
+      const angle = (i / count) * Math.PI * 2;
+      const speed = 3 + Math.random() * 4;
+      const color = colors[Math.floor(Math.random() * colors.length)];
+      const p = this.getParticle(x, y, color);
+      p.vx = Math.cos(angle) * speed;
+      p.vy = Math.sin(angle) * speed;
+      p.size = 4 + Math.random() * 4;
+      p.life = 40;
+      p.glow = true;
+      this.particles.push(p);
+    }
+  }
+
+  // Star particles for coin collection
+  spawnStarParticles(x, y, count = 6) {
+    const colors = ["#FFD700", "#FFA500", "#FFFF00", "#FFE4B5"];
+    for (let i = 0; i < count; i++) {
+      const angle = (i / count) * Math.PI * 2;
+      const speed = 2 + Math.random() * 3;
+      const color = colors[Math.floor(Math.random() * colors.length)];
+      const p = this.getParticle(x, y, color);
+      p.vx = Math.cos(angle) * speed;
+      p.vy = Math.sin(angle) * speed - 2;
+      p.size = 3 + Math.random() * 3;
+      p.life = 35;
+      p.glow = true;
+      p.isStar = true;
+      this.particles.push(p);
     }
   }
 
@@ -1079,8 +1300,48 @@ class MiniGame {
 
     // Check flagpole
     if (this.flagpole && this.player.x > this.flagpole.x) {
+      // Victory celebration particles
+      this.spawnFlagpoleCelebration();
       this.gameOver(true);
     }
+  }
+
+  // Spawn celebration particles when reaching flagpole
+  spawnFlagpoleCelebration() {
+    const celebrationColors = [
+      "#FFD700",
+      "#FF6B6B",
+      "#4ECDC4",
+      "#45B7D1",
+      "#96CEB4",
+      "#FFEAA7",
+      "#DDA0DD",
+    ];
+
+    // Burst of particles from flagpole
+    for (let i = 0; i < 30; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const speed = 3 + Math.random() * 6;
+      const color =
+        celebrationColors[Math.floor(Math.random() * celebrationColors.length)];
+      const p = this.getParticle(
+        this.flagpole.x + 17,
+        this.flagpole.y + 20 + Math.random() * 40,
+        color,
+      );
+      p.vx = Math.cos(angle) * speed;
+      p.vy = Math.sin(angle) * speed - 3;
+      p.size = 4 + Math.random() * 6;
+      p.life = 50 + Math.random() * 30;
+      p.maxLife = p.life;
+      p.glow = true;
+      p.isStar = Math.random() > 0.5;
+      this.particles.push(p);
+    }
+
+    // Screen shake for victory
+    this.triggerScreenShake(8);
+    this.vibrate([50, 30, 50, 30, 100]);
   }
 
   render() {
@@ -1088,16 +1349,19 @@ class MiniGame {
     const w = this.canvas.width;
     const h = this.canvas.height;
 
-    // Use cached sky gradient
+    // Update screen shake
+    this.updateScreenShake();
+
+    // Apply screen shake
+    ctx.save();
+    ctx.translate(this.screenShake.x, this.screenShake.y);
+
+    // Use cached sky gradient with enhanced colors
     ctx.fillStyle = this.getSkyGradient();
     ctx.fillRect(0, 0, w, h);
 
-    // Parallax clouds
-    const cloudOffset = this.cameraX * 0.3;
-    this.drawCloud(ctx, 100 - (cloudOffset % 400), 60, 1);
-    this.drawCloud(ctx, 300 - (cloudOffset % 500), 40, 0.7);
-    this.drawCloud(ctx, 550 - (cloudOffset % 600), 80, 1.2);
-    this.drawCloud(ctx, 700 - (cloudOffset % 450), 50, 0.9);
+    // Draw enhanced parallax background layers
+    this.drawParallaxBackground(ctx, w, h);
 
     ctx.save();
     ctx.translate(-this.cameraX, 0);
@@ -1112,6 +1376,70 @@ class MiniGame {
     this.drawFireballs();
 
     ctx.restore();
+    ctx.restore();
+  }
+
+  drawParallaxBackground(ctx, w, h) {
+    // Draw distant mountains (slowest parallax)
+    const mountainOffset = this.cameraX * 0.1;
+    ctx.fillStyle = "rgba(100, 130, 180, 0.4)";
+    this.backgroundLayers.mountains.forEach((m) => {
+      const x = m.x - (mountainOffset % 4000);
+      if (x > -m.width && x < w + m.width) {
+        ctx.beginPath();
+        ctx.moveTo(x, h - 64);
+        ctx.lineTo(x + m.width / 2, h - 64 - m.height);
+        ctx.lineTo(x + m.width, h - 64);
+        ctx.closePath();
+        ctx.fill();
+      }
+    });
+
+    // Draw hills (medium parallax)
+    const hillOffset = this.cameraX * 0.2;
+    ctx.fillStyle = "rgba(50, 120, 80, 0.5)";
+    this.backgroundLayers.hills.forEach((hill) => {
+      const x = hill.x - (hillOffset % 3750);
+      if (x > -hill.width && x < w + hill.width) {
+        ctx.beginPath();
+        ctx.ellipse(
+          x + hill.width / 2,
+          h - 64,
+          hill.width / 2,
+          hill.height,
+          0,
+          Math.PI,
+          0,
+        );
+        ctx.fill();
+      }
+    });
+
+    // Draw clouds (slow parallax with gentle movement)
+    const cloudOffset = this.cameraX * 0.3;
+    this.backgroundLayers.clouds.forEach((cloud, i) => {
+      const x =
+        cloud.x - (cloudOffset % 2400) + Math.sin(this.frame * 0.01 + i) * 5;
+      if (x > -100 && x < w + 100) {
+        this.drawCloud(ctx, x, cloud.y, cloud.scale);
+      }
+    });
+
+    // Draw bushes (faster parallax, near ground)
+    const bushOffset = this.cameraX * 0.5;
+    ctx.fillStyle = "#228B22";
+    this.backgroundLayers.bushes.forEach((bush) => {
+      const x = bush.x - (bushOffset % 3000);
+      if (x > -50 && x < w + 50) {
+        const bushY = h - 64;
+        const bushSize = 20 * bush.scale;
+        ctx.beginPath();
+        ctx.arc(x, bushY, bushSize, Math.PI, 0);
+        ctx.arc(x + bushSize * 0.8, bushY, bushSize * 0.8, Math.PI, 0);
+        ctx.arc(x - bushSize * 0.8, bushY, bushSize * 0.7, Math.PI, 0);
+        ctx.fill();
+      }
+    });
   }
 
   drawBlocks() {
@@ -1389,31 +1717,69 @@ class MiniGame {
 
   gameOver(win) {
     this.gameRunning = false;
+
+    // Haptic feedback
+    if (win) {
+      this.vibrate([50, 30, 50, 30, 100]); // Victory pattern
+    } else {
+      this.vibrate([100, 50, 200]); // Defeat pattern
+    }
+
     const gameOverScreen = document.getElementById("gameOverScreen");
     const gameOverTitle = document.getElementById("gameOverTitle");
     const finalScoreEl = document.getElementById("finalScore");
-    const overlayIcon = document.getElementById("overlayIcon");
+    const overlayIcon = document.querySelector(".overlay-icon");
 
-    gameOverScreen.classList.remove("win", "lose");
+    if (gameOverScreen) {
+      gameOverScreen.classList.remove("win", "lose");
+    }
 
     if (gameOverTitle) {
       if (win) {
-        gameOverScreen.classList.add("win");
+        if (gameOverScreen) gameOverScreen.classList.add("win");
         if (this.currentLevel < this.totalLevels) {
           gameOverTitle.innerText = "LEVEL CLEAR!";
-          if (overlayIcon) overlayIcon.className = "ph ph-check-circle";
+          if (overlayIcon)
+            overlayIcon.innerHTML = `
+            <svg class="icon-svg-inline" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+              <path d="M9 12L11 14L15 10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>`;
         } else {
           gameOverTitle.innerText = "YOU WIN!";
-          if (overlayIcon) overlayIcon.className = "ph ph-trophy";
+          if (overlayIcon)
+            overlayIcon.innerHTML = `
+            <svg class="icon-svg-inline" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 2L15 8L22 9L17 14L18 21L12 18L6 21L7 14L2 9L9 8L12 2Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+            </svg>`;
         }
       } else {
-        gameOverScreen.classList.add("lose");
+        if (gameOverScreen) gameOverScreen.classList.add("lose");
         gameOverTitle.innerText = "GAME OVER";
-        if (overlayIcon) overlayIcon.className = "ph ph-skull";
+        if (overlayIcon)
+          overlayIcon.innerHTML = `
+          <svg class="icon-svg-inline" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+            <path d="M15 9L9 15M9 9L15 15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>`;
       }
     }
 
-    if (finalScoreEl) finalScoreEl.innerText = this.score.toLocaleString();
+    if (finalScoreEl) {
+      // Animate score counting up
+      let displayScore = 0;
+      const targetScore = this.score;
+      const increment = Math.ceil(targetScore / 30);
+      const countUp = () => {
+        displayScore = Math.min(displayScore + increment, targetScore);
+        finalScoreEl.innerText = displayScore.toLocaleString();
+        if (displayScore < targetScore) {
+          requestAnimationFrame(countUp);
+        }
+      };
+      countUp();
+    }
+
     if (gameOverScreen) {
       gameOverScreen.classList.add("active");
 
@@ -1421,12 +1787,24 @@ class MiniGame {
       const restartBtn = document.getElementById("restartBtn");
       if (restartBtn) {
         if (win && this.currentLevel < this.totalLevels) {
-          restartBtn.innerHTML = "<i class='ph ph-arrow-right'></i> NEXT LEVEL";
+          restartBtn.innerHTML = `
+            <svg class="icon-svg-inline" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            NEXT LEVEL`;
           restartBtn.onclick = () => this.nextLevel();
         } else {
-          restartBtn.innerHTML =
-            "<i class='ph ph-arrow-clockwise'></i> PLAY AGAIN";
-          restartBtn.onclick = () => this.restartLevel();
+          restartBtn.innerHTML = `
+            <svg class="icon-svg-inline" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M3 12C3 7.5 6.5 4 11 4C14 4 16.5 5.5 18 8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              <path d="M21 12C21 16.5 17.5 20 13 20C10 20 7.5 18.5 6 16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              <path d="M3 8L6 5L9 8M21 16L18 19L15 16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            PLAY AGAIN`;
+          restartBtn.onclick = () => {
+            this.currentLevel = 1;
+            this.startGame();
+          };
         }
       }
     }
@@ -1447,27 +1825,45 @@ class MiniGame {
   hitBlock(block) {
     if (block.type === "question" && block.active) {
       block.active = false;
-      block.bounceOffset = -10;
+      block.bounceOffset = -12;
+      this.triggerScreenShake(3);
+      this.vibrate(15);
+
       if (block.content === "mushroom") {
         this.items.push(new Mushroom(block.x, block.y - 32));
         this.playSound("powerup");
+        this.spawnBurstParticles(
+          block.x + 16,
+          block.y,
+          ["#FFD700", "#FFA500", "#FF6347"],
+          8,
+        );
       } else {
         this.updateScore(200);
-        this.spawnParticles(block.x + 16, block.y - 16, "#ffd700", 6);
+        this.spawnStarParticles(block.x + 16, block.y - 16);
         this.playSound("coin");
       }
     } else if (block.type === "brick") {
       if (block.unbreakable) {
         block.bounceOffset = -6;
         this.playSound("bump");
+        this.vibrate(10);
       } else if (this.player.isBig) {
         block.broken = true;
-        this.spawnParticles(block.x + 16, block.y + 16, "#c84c0c", 8);
+        this.triggerScreenShake(5);
+        this.vibrate([10, 5, 15]);
+        this.spawnBurstParticles(
+          block.x + 16,
+          block.y + 16,
+          ["#c84c0c", "#8B4513", "#A0522D", "#D2691E"],
+          12,
+        );
         this.playSound("break");
         this.updateScore(50);
       } else {
         block.bounceOffset = -8;
         this.playSound("bump");
+        this.vibrate(8);
       }
     }
   }
@@ -1483,16 +1879,24 @@ class Particle {
     this.vy = -Math.random() * 6 - 2;
     this.size = Math.random() * 6 + 4;
     this.life = 30;
+    this.maxLife = 30;
     this.dead = false;
     this.rotation = Math.random() * Math.PI * 2;
     this.rotationSpeed = (Math.random() - 0.5) * 0.3;
+    this.hasGravity = true;
+    this.glow = false;
+    this.isStar = false;
+    this.isSpeedLine = false;
   }
 
   update() {
     this.x += this.vx;
     this.y += this.vy;
-    this.vy += 0.4;
+    if (this.hasGravity) {
+      this.vy += 0.4;
+    }
     this.rotation += this.rotationSpeed;
+    this.vx *= 0.98; // Air resistance
     this.life--;
     if (this.life <= 0) this.dead = true;
   }
@@ -1501,11 +1905,59 @@ class Particle {
     ctx.save();
     ctx.translate(this.x, this.y);
     ctx.rotate(this.rotation);
+
+    const alpha = this.life / this.maxLife;
+    const scale = 0.5 + (this.life / this.maxLife) * 0.5;
+
+    // Glow effect
+    if (this.glow) {
+      ctx.shadowColor = this.color;
+      ctx.shadowBlur = 10;
+    }
+
+    ctx.globalAlpha = alpha;
     ctx.fillStyle = this.color;
-    ctx.globalAlpha = this.life / 30;
-    ctx.fillRect(-this.size / 2, -this.size / 2, this.size, this.size);
+
+    if (this.isStar) {
+      // Draw star shape
+      this.drawStar(ctx, 0, 0, 5, this.size * scale, this.size * scale * 0.5);
+    } else if (this.isSpeedLine) {
+      // Draw speed line (elongated horizontal line)
+      const lineLength = 8 + (1 - alpha) * 12;
+      ctx.fillRect(-lineLength / 2, -1, lineLength, 2);
+    } else {
+      // Draw square particle
+      const sz = this.size * scale;
+      ctx.fillRect(-sz / 2, -sz / 2, sz, sz);
+    }
+
     ctx.globalAlpha = 1;
+    ctx.shadowBlur = 0;
     ctx.restore();
+  }
+
+  drawStar(ctx, cx, cy, spikes, outerRadius, innerRadius) {
+    let rot = (Math.PI / 2) * 3;
+    let x = cx;
+    let y = cy;
+    const step = Math.PI / spikes;
+
+    ctx.beginPath();
+    ctx.moveTo(cx, cy - outerRadius);
+    for (let i = 0; i < spikes; i++) {
+      x = cx + Math.cos(rot) * outerRadius;
+      y = cy + Math.sin(rot) * outerRadius;
+      ctx.lineTo(x, y);
+      rot += step;
+
+      x = cx + Math.cos(rot) * innerRadius;
+      y = cy + Math.sin(rot) * innerRadius;
+      ctx.lineTo(x, y);
+      rot += step;
+    }
+    ctx.lineTo(cx, cy - outerRadius);
+    ctx.closePath();
+    ctx.fill();
   }
 }
 
@@ -1517,12 +1969,15 @@ class Coin {
     this.w = 16;
     this.h = 16;
     this.collected = false;
+    this.collectAnimation = 0;
+    this.floatOffset = Math.random() * Math.PI * 2;
   }
 
   reset(x, y) {
     this.x = x;
     this.y = y;
     this.collected = false;
+    this.collectAnimation = 0;
   }
 
   update(player, game) {
@@ -1536,36 +1991,33 @@ class Coin {
       this.collected = true;
       game.updateScore(100);
       game.playSound("coin");
-      game.spawnParticles(this.x + 8, this.y + 8, "#ffd700", 4);
+      game.vibrate(8);
+      game.spawnStarParticles(this.x + 8, this.y + 8);
     }
   }
 
   draw(ctx, frame) {
     const stretch = Math.abs(Math.sin(frame * 0.1));
     const w = 12 * stretch + 4;
+    const floatY = Math.sin(frame * 0.08 + this.floatOffset) * 3;
 
     // Shadow
-    ctx.fillStyle = "rgba(0, 0, 0, 0.15)";
+    ctx.fillStyle = "rgba(0, 0, 0, 0.2)";
     ctx.beginPath();
-    ctx.ellipse(
-      this.x + 8,
-      this.y + 15,
-      w / 2 + 1,
-      4,
-      0,
-      0,
-      Math.PI * 2,
-      false,
-    );
+    ctx.ellipse(this.x + 8, this.y + 18, w / 2 + 1, 3, 0, 0, Math.PI * 2);
     ctx.fill();
+
+    // Coin glow
+    ctx.shadowColor = "#FFD700";
+    ctx.shadowBlur = 8;
 
     // Coin with 3D effect
     const coinGrad = ctx.createRadialGradient(
       this.x + 6,
-      this.y + 6,
+      this.y + 4 + floatY,
       0,
       this.x + 8,
-      this.y + 8,
+      this.y + 8 + floatY,
       12,
     );
     coinGrad.addColorStop(0, "#FFFF8A");
@@ -1577,52 +2029,60 @@ class Coin {
     ctx.beginPath();
     ctx.ellipse(
       this.x + 8,
-      this.y + 8,
+      this.y + 8 + floatY,
       w / 2 + 2,
       10,
       0,
       0,
       Math.PI * 2,
-      false,
     );
     ctx.fill();
 
-    // Coin edge (darker)
+    ctx.shadowBlur = 0;
+
+    // Coin edge
     ctx.strokeStyle = "#B8860B";
     ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.ellipse(
       this.x + 8,
-      this.y + 8,
+      this.y + 8 + floatY,
       w / 2 + 2,
       10,
       0,
       0,
       Math.PI * 2,
-      false,
     );
     ctx.stroke();
 
     // Inner shine
     const innerGrad = ctx.createRadialGradient(
       this.x + 7,
-      this.y + 6,
+      this.y + 5 + floatY,
       0,
       this.x + 7,
-      this.y + 6,
+      this.y + 6 + floatY,
       6,
     );
     innerGrad.addColorStop(0, "#FFFFE0");
     innerGrad.addColorStop(1, "#FFFACD");
     ctx.fillStyle = innerGrad;
     ctx.beginPath();
-    ctx.ellipse(this.x + 7, this.y + 7, w / 3 - 1, 4, 0, 0, Math.PI * 2, false);
+    ctx.ellipse(
+      this.x + 7,
+      this.y + 7 + floatY,
+      w / 3 - 1,
+      4,
+      0,
+      0,
+      Math.PI * 2,
+    );
     ctx.fill();
 
-    // Highlight
-    ctx.fillStyle = "rgba(255, 255, 255, 0.7)";
+    // Sparkle highlight
+    ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
     ctx.beginPath();
-    ctx.ellipse(this.x + 5, this.y + 4, 2, 3, -0.5, 0, Math.PI * 2, false);
+    ctx.ellipse(this.x + 5, this.y + 4 + floatY, 2, 3, -0.5, 0, Math.PI * 2);
     ctx.fill();
 
     // Star symbol on coin
@@ -1630,7 +2090,7 @@ class Coin {
     ctx.font = "bold 8px sans-serif";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.fillText("$", this.x + 8, this.y + 8);
+    ctx.fillText("$", this.x + 8, this.y + 8 + floatY);
   }
 }
 
@@ -1673,6 +2133,11 @@ class Mario extends Entity {
     this.fireballs = [];
     this.canShoot = true;
     this.shootCooldown = 0;
+    // Landing dust effect
+    this.wasInAir = false;
+    this.landingDustTimer = 0;
+    // Speed lines effect
+    this.speedLineTimer = 0;
   }
 
   update(keys, blocks, game) {
@@ -1729,8 +2194,36 @@ class Mario extends Entity {
     // Coyote time - allow jumping shortly after leaving platform
     if (this.grounded) {
       this.coyoteTimer = gc.COYOTE_TIME;
+
+      // Landing dust effect - spawn dust when landing from air
+      if (this.wasInAir && this.vy >= 0) {
+        this.spawnLandingDust(game);
+        this.landingDustTimer = 10;
+        game.vibrate(5); // Subtle landing feedback
+      }
+      this.wasInAir = false;
     } else if (wasGrounded && this.vy > 0) {
       this.coyoteTimer--;
+    }
+
+    // Track if in air
+    if (!this.grounded && Math.abs(this.vy) > 2) {
+      this.wasInAir = true;
+    }
+
+    // Decrease landing dust timer
+    if (this.landingDustTimer > 0) {
+      this.landingDustTimer--;
+    }
+
+    // Speed lines effect when running fast
+    if (Math.abs(this.vx) > gc.MAX_SPEED && this.grounded) {
+      this.speedLineTimer++;
+      if (this.speedLineTimer % 3 === 0) {
+        this.spawnSpeedLine(game);
+      }
+    } else {
+      this.speedLineTimer = 0;
     }
 
     // Jump buffer - remember jump input
@@ -1782,6 +2275,78 @@ class Mario extends Entity {
     this.grounded = false;
     this.coyoteTimer = 0;
     game.playSound("jump");
+
+    // Spawn jump dust particles
+    this.spawnJumpDust(game);
+  }
+
+  // Spawn jump dust particles (smaller burst when jumping)
+  spawnJumpDust(game) {
+    const dustColors = ["#E8DCC8", "#D4C4A8", "#C0B090"];
+    for (let i = 0; i < 4; i++) {
+      const angle = Math.PI + (Math.random() - 0.5) * Math.PI * 0.6;
+      const speed = 2 + Math.random() * 1.5;
+      const color = dustColors[Math.floor(Math.random() * dustColors.length)];
+      const p = game.getParticle(
+        this.x + this.w / 2 + (Math.random() - 0.5) * 12,
+        this.y + this.h,
+        color,
+      );
+      p.vx = Math.cos(angle) * speed;
+      p.vy = Math.sin(angle) * speed * 0.5;
+      p.size = 2 + Math.random() * 3;
+      p.life = 12 + Math.random() * 6;
+      p.maxLife = p.life;
+      p.hasGravity = true;
+      p.glow = false;
+      game.particles.push(p);
+    }
+  }
+
+  // Spawn landing dust particles
+  spawnLandingDust(game) {
+    const dustColors = ["#E8DCC8", "#D4C4A8", "#C0B090", "#A89070"];
+    for (let i = 0; i < 6; i++) {
+      const angle = (Math.random() - 0.5) * Math.PI;
+      const speed = 1.5 + Math.random() * 2;
+      const color = dustColors[Math.floor(Math.random() * dustColors.length)];
+      const p = game.getParticle(
+        this.x + this.w / 2 + (Math.random() - 0.5) * 16,
+        this.y + this.h - 4,
+        color,
+      );
+      p.vx = Math.cos(angle) * speed * (this.facingRight ? 1 : -1);
+      p.vy = -Math.random() * 1.5 - 0.5;
+      p.size = 3 + Math.random() * 4;
+      p.life = 15 + Math.random() * 10;
+      p.maxLife = p.life;
+      p.hasGravity = false;
+      p.glow = false;
+      game.particles.push(p);
+    }
+  }
+
+  // Spawn speed line particles when running fast
+  spawnSpeedLine(game) {
+    const lineColors = [
+      "rgba(255, 255, 255, 0.6)",
+      "rgba(200, 220, 255, 0.5)",
+      "rgba(180, 200, 255, 0.4)",
+    ];
+    const color = lineColors[Math.floor(Math.random() * lineColors.length)];
+    const p = game.getParticle(
+      this.x + (this.facingRight ? -8 : this.w + 8),
+      this.y + this.h / 2 + (Math.random() - 0.5) * this.h * 0.8,
+      color,
+    );
+    p.vx = this.facingRight ? -4 : 4;
+    p.vy = 0;
+    p.size = 2;
+    p.life = 8;
+    p.maxLife = 8;
+    p.hasGravity = false;
+    p.isSpeedLine = true;
+    game.particles.push(p);
   }
 
   shoot(game) {

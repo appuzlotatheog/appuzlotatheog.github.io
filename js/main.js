@@ -24,6 +24,83 @@ class Portfolio {
     this.initGameModal();
     this.initAgeCounter();
     this.initResizeHandler();
+    this.initTypewriter();
+    this.initTiltEffect();
+    this.initEmailCopy();
+    this.unregisterServiceWorker();
+  }
+
+  unregisterServiceWorker() {
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.getRegistrations().then(function (registrations) {
+        for (let registration of registrations) {
+          registration.unregister();
+        }
+      });
+    }
+  }
+
+  initEmailCopy() {
+    const emailLinks = document.querySelectorAll('a[href^="mailto:"]');
+    emailLinks.forEach((link) => {
+      link.addEventListener("click", (e) => {
+        e.preventDefault();
+        const email = link.getAttribute("href").replace("mailto:", "");
+        navigator.clipboard
+          .writeText(email)
+          .then(() => {
+            this.showToast("Email copied to clipboard!");
+          })
+          .catch((err) => {
+            console.error("Failed to copy email: ", err);
+            window.location.href = link.href; // Fallback to default mailto behavior
+          });
+      });
+    });
+  }
+
+  showToast(message) {
+    const toast = document.createElement("div");
+    toast.className = "toast-notification";
+    toast.textContent = message;
+    document.body.appendChild(toast);
+
+    // Trigger animation
+    setTimeout(() => toast.classList.add("show"), 10);
+
+    setTimeout(() => {
+      toast.classList.remove("show");
+      setTimeout(() => toast.remove(), 300);
+    }, 3000);
+  }
+
+  initTiltEffect() {
+    if (this.isMobile) return;
+
+    const cards = document.querySelectorAll(
+      ".project-card, .project-card-horizontal, .tool-category",
+    );
+
+    cards.forEach((card) => {
+      card.addEventListener("mousemove", (e) => {
+        const rect = card.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+
+        const centerX = rect.width / 2;
+        const centerY = rect.height / 2;
+
+        const rotateX = ((y - centerY) / centerY) * -5; // Max 5deg rotation
+        const rotateY = ((x - centerX) / centerX) * 5;
+
+        card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.02, 1.02, 1.02)`;
+      });
+
+      card.addEventListener("mouseleave", () => {
+        card.style.transform =
+          "perspective(1000px) rotateX(0) rotateY(0) scale3d(1, 1, 1)";
+      });
+    });
   }
 
   // Fix for mobile viewport height (100vh issue with address bar)
@@ -144,12 +221,61 @@ class Portfolio {
     }
   }
 
+  initTypewriter() {
+    const roles = ["Dev", "Designer", "Creator"];
+    let roleIndex = 0;
+    let charIndex = 0;
+    let isDeleting = false;
+    const typeSpeed = 100;
+    const deleteSpeed = 50;
+    const delayBetween = 2000;
+    const element = document.querySelector(".typewriter-text");
+
+    if (!element) return;
+
+    const type = () => {
+      const currentRole = roles[roleIndex];
+
+      if (isDeleting) {
+        element.textContent = currentRole.substring(0, charIndex - 1);
+        charIndex--;
+      } else {
+        element.textContent = currentRole.substring(0, charIndex + 1);
+        charIndex++;
+      }
+
+      let speed = isDeleting ? deleteSpeed : typeSpeed;
+
+      if (!isDeleting && charIndex === currentRole.length) {
+        speed = delayBetween;
+        isDeleting = true;
+      } else if (isDeleting && charIndex === 0) {
+        isDeleting = false;
+        roleIndex = (roleIndex + 1) % roles.length;
+        speed = 500;
+      }
+
+      setTimeout(type, speed);
+    };
+
+    setTimeout(type, 1000);
+  }
+
   initSlider() {
     this.track = document.getElementById("slider-track");
     this.dots = document.querySelectorAll(".dot");
     this.progressBar = document.getElementById("progressBar");
 
     if (!this.track) return;
+
+    // See My Work button scroll
+    const seeWorkBtn = document.getElementById("seeWorkBtn");
+    if (seeWorkBtn) {
+      seeWorkBtn.addEventListener("click", () => {
+        this.currentSlide = 3; // Go to Projects slide
+        this.updateSlider();
+      });
+    }
 
     const nextBtn = document.getElementById("nextBtn");
     const prevBtn = document.getElementById("prevBtn");
